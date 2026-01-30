@@ -1,0 +1,135 @@
+<template>
+  <div class="shoucang-page">
+    <div class="header-box">
+      <image class="header-bg" src="/assets/img/shoucang-bg.png"></image>
+    </div>
+    
+    <!-- 暂无收藏 -->
+    <div class="empty-container" if="{{isEmpty}}">
+       <image class="empty-img" src="/assets/img/shoucang-kong.png"></image>
+       <text class="empty-text">暂无收藏~</text>
+    </div>
+
+    <!-- 收藏列表 -->
+    <list class="collection-list" if="{{!isEmpty}}">
+      <list-item type="collection-item" for="{{(index, item) in collectionList}}">
+        <div class="collection-item">
+          <image class="collection-img" src="{{item.src}}"></image>
+        </div>
+      </list-item>
+    </list>
+  </div>
+</template>
+
+<script>
+import storage from '@system.storage'
+
+export default {
+  data: {
+    isEmpty: true,
+    collectionList: []
+  },
+
+  onInit() {
+    console.log('Shoucang page onInit')
+    this.loadCollections()
+  },
+
+  onShow() {
+    console.log('Shoucang page onShow')
+    this.loadCollections()
+  },
+
+  refresh() {
+    console.log('Shoucang page refresh called')
+    this.loadCollections()
+  },
+
+  loadCollections() {
+    console.log('Loading collections from storage')
+    const self = this
+    storage.get({
+      key: 'collections',
+      success: function(data) {
+        console.log('Storage get success:', data)
+        let collections = []
+        try {
+          if (typeof data === 'string' && data.trim()) {
+            collections = JSON.parse(data)
+          } else if (data === null || data === undefined || data === '') {
+            collections = []
+          }
+        } catch (e) {
+          console.error('Parse collections error:', e)
+          collections = []
+        }
+
+        self.collectionList = Array.isArray(collections) ? collections : []
+        self.isEmpty = self.collectionList.length === 0
+        console.log('Final count:', self.collectionList.length, 'isEmpty:', self.isEmpty)
+      },
+      fail: function(data, code) {
+        console.log('Get collections failed:', data, code)
+        self.collectionList = []
+        self.isEmpty = true
+      }
+    })
+  }
+}
+</script>
+
+<style>
+.shoucang-page {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #f8f8f8;
+}
+
+.header-box {
+  width: 100%;
+  height: 120px;
+}
+
+.header-bg {
+  width: 100%;
+  height: 100%;
+  resize-mode: stretch;
+}
+
+.empty-container {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.empty-img {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 10px;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #999999;
+}
+
+.collection-list {
+  flex: 1;
+  width: 100%;
+  padding: 10px;
+}
+
+.collection-item {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.collection-img {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  resize-mode: cover;
+}
+</style>

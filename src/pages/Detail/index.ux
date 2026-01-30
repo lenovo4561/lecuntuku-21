@@ -1,0 +1,169 @@
+<template>
+  <div class="page">
+    <stack class="stack-container">
+      <!-- 只有 swiper 用于图片浏览 -->
+      <swiper class="swiper" index="{{currentIndex}}" onchange="onSwiperChange" indicator="false">
+        <div class="swiper-item" for="{{(index, item) in wallpaperList}}">
+          <div class="placeholder-img">
+             <text class="placeholder-text">壁纸 {{index + 1}}</text>
+          </div>
+        </div>
+      </swiper>
+
+      <!-- 顶部返回按钮 -->
+      <div class="back-btn" onclick="goBack">
+        <image class="back-icon" src="/assets/img/back.png"></image>
+      </div>
+
+      <!-- 底部操作栏 -->
+      <div class="bottom-bar">
+        <!-- 下载按钮 -->
+        <div class="action-btn download-btn" onclick="handleDownload">
+          <image class="btn-icon" src="/assets/img/xiazai.png"></image>
+          <text class="btn-text">下载</text>
+        </div>
+        
+        <!-- 喜欢按钮 -->
+        <div class="action-btn like-btn" onclick="handleLike">
+          <image class="btn-icon" src="/assets/img/like-s.png"></image>
+          <text class="btn-text">喜欢</text>
+        </div>
+      </div>
+    </stack>
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+import prompt from '@system.prompt'
+
+export default {
+  protected: {
+    startindex: 0
+  },
+  private: {
+    currentIndex: 0,
+    wallpaperList: [1, 2, 3, 4, 5] // 占位数据
+  },
+  onInit() {
+    if (this.startindex) {
+      this.currentIndex = parseInt(this.startindex)
+    }
+  },
+  onSwiperChange(e) {
+    this.currentIndex = e.index
+  },
+  goBack() {
+    router.back()
+  },
+  handleDownload() {
+    prompt.showToast({
+      message: '开始下载...'
+    })
+  },
+  handleLike() {
+    prompt.showToast({
+      message: '已添加到喜欢'
+    })
+  }
+}
+</script>
+
+<style>
+.page {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+}
+
+.stack-container {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-item {
+  width: 100%;
+  height: 100%;
+}
+
+.placeholder-img {
+  width: 100%;
+  height: 100%;
+  background-color: #333333;
+  justify-content: center;
+  align-items: center;
+}
+
+.placeholder-text {
+  color: #ffffff;
+  font-size: 20px;
+}
+
+/* 返回按钮 */
+.back-btn {
+  position: absolute;
+  top: 40px;
+  left: 20px;
+  width: 36px;
+  height: 36px;
+  background-color: #ffffff;
+  border-radius: 18px;
+  justify-content: center;
+  align-items: center;
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* 底部操作栏 */
+.bottom-bar {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  width: 100%;
+  padding-left: 20px;
+  padding-right: 20px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.action-btn {
+  width: 140px;
+  height: 44px;
+  border-radius: 22px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.download-btn {
+  background-color: #332266; /* 深紫色近似UI */
+}
+
+.like-btn {
+  background-color: #ff4455; /* 红色近似UI */
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  /* 假设 icon 是白色的，如果不是可以使用 filter 也就是 svg 的话，但这里是 png。 
+     如果图是黑或者彩色的，放在深色底上可能需要调整。暂且假设可用 */
+}
+
+.btn-text {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: bold;
+}
+</style>

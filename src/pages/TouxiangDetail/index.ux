@@ -1,0 +1,248 @@
+<template>
+  <div class="page">
+    <stack class="stack-container">
+      <!-- 背景层：高斯模糊 -->
+      <div class="background-layer">
+        <image class="bg-image" src="/assets/img/touxiang-bg.png"></image>
+        <div class="blur-mask"></div>
+      </div>
+
+      <!-- 内容层 -->
+      <div class="content-layer">
+        <!-- 顶部区域 -->
+        <div class="top-bar">
+          <div class="back-btn" onclick="goBack">
+            <image class="back-icon" src="/assets/img/back.png"></image>
+          </div>
+          <text class="counter-text">{{currentIndex + 1}}/{{totalCount}}</text>
+          <div class="placeholder-right"></div>
+        </div>
+
+        <!-- 中间 Swiper 区域 -->
+        <div class="swiper-container">
+           <swiper class="swiper" index="{{currentIndex}}" onchange="onSwiperChange" indicator="false" loop="true" previous-margin="50px" next-margin="50px">
+             <div class="swiper-item" for="{{(index, item) in avatarList}}">
+               <div class="avatar-card">
+                 <div class="placeholder-img">
+                   <text class="placeholder-text">头像 {{index + 1}}</text>
+                 </div>
+               </div>
+             </div>
+           </swiper>
+        </div>
+
+        <!-- 底部操作栏 -->
+        <div class="bottom-bar">
+          <!-- 下载按钮 -->
+          <div class="action-btn download-btn" onclick="handleDownload">
+            <image class="btn-icon" src="/assets/img/xiazai.png"></image>
+            <text class="btn-text">下载</text>
+          </div>
+          
+          <!-- 喜欢按钮 -->
+          <div class="action-btn like-btn" onclick="handleLike">
+            <image class="btn-icon" src="/assets/img/like-s.png"></image>
+            <text class="btn-text">喜欢</text>
+          </div>
+        </div>
+      </div>
+    </stack>
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+import prompt from '@system.prompt'
+
+export default {
+  protected: {
+    startindex: 0
+  },
+  private: {
+    currentIndex: 0,
+    totalCount: 20,
+    avatarList: Array.from({ length: 20 }, (_, i) => i) // 生成20个占位数据
+  },
+  onInit() {
+    if (this.startindex) {
+      this.currentIndex = parseInt(this.startindex)
+    }
+  },
+  onSwiperChange(e) {
+    this.currentIndex = e.index
+  },
+  goBack() {
+    router.back()
+  },
+  handleDownload() {
+    prompt.showToast({
+      message: '开始下载...'
+    })
+  },
+  handleLike() {
+    prompt.showToast({
+      message: '已添加到喜欢'
+    })
+  }
+}
+</script>
+
+<style>
+.page {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.stack-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* 背景层 */
+.background-layer {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+.bg-image {
+  width: 100%;
+  height: 100%;
+  resize-mode: cover;
+  filter: blur(20px); /* 高斯模糊效果 */
+}
+
+.blur-mask {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.3); /* 轻微遮罩确保文字可见 */
+  position: absolute;
+}
+
+/* 内容层 */
+.content-layer {
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 顶部栏 */
+.top-bar {
+  width: 100%;
+  height: 80px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 30px; /* 沉浸式状态栏预留 */
+}
+
+.back-btn {
+  width: 36px;
+  height: 36px;
+  background-color: #ffffff;
+  border-radius: 18px;
+  justify-content: center;
+  align-items: center;
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.counter-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #000000;
+}
+
+.placeholder-right {
+  width: 36px;
+}
+
+/* 中间轮播 */
+.swiper-container {
+  flex: 1;
+  width: 100%;
+  justify-content: center;
+}
+
+.swiper {
+  width: 100%;
+  height: 400px; /* 根据头像比例调整 */
+}
+
+.swiper-item {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-card {
+  width: 90%;
+  height: 90%; 
+  /* 让卡片比swiper item稍小，产生间距效果，或者依赖 margin */
+  justify-content: center;
+  align-items: center;
+}
+
+.placeholder-img {
+  width: 100%;
+  height: 100%; /* 保持正方形或其他比例 */
+  background-color: #e0e0e0;
+  border-radius: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.placeholder-text {
+  color: #999999;
+  font-size: 20px;
+}
+
+/* 底部操作栏 */
+.bottom-bar {
+  width: 100%;
+  height: 100px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.action-btn {
+  width: 140px;
+  height: 44px;
+  border-radius: 22px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.download-btn {
+  background-color: #332266; /* 深紫色近似UI */
+}
+
+.like-btn {
+  background-color: #ff4455; /* 红色近似UI */
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}
+
+.btn-text {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: bold;
+}
+</style>
