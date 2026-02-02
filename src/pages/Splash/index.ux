@@ -1,7 +1,7 @@
 <template>
   <div class="splash-container">
     <!-- 背景图 -->
-    <image class="bg-img" src="/assets/img/loading-bg.png"></image>
+    <image class="bg-img" src="/pkg_main/assets/img/loading-bg.png"></image>
 
     <!-- 隐私协议弹窗 -->
     <div class="modal_overlay" if="{{showModal}}">
@@ -86,7 +86,7 @@ export default {
   },
   openPrivacy() {
     router.push({
-      uri: '/pages/Webview',
+      uri: '/pkg_main/pages/Webview',
       params: {
         url: 'https://api.51dsp.cn/index/privacy.do?pn=com.jslecuntuku.storagelcjs',
         title: '隐私政策'
@@ -95,7 +95,7 @@ export default {
   },
   openAgreement() {
     router.push({
-      uri: '/pages/Webview',
+      uri: '/pkg_main/pages/Webview',
       params: {
         url: 'https://api.51dsp.cn/index/agreement.do?pn=com.jslecuntuku.storagelcjs',
         title: '用户协议'
@@ -116,7 +116,7 @@ export default {
   },
   navigateToHome() {
     router.replace({
-      uri: '/pages/Main'
+      uri: '/pkg_main/pages/Main'
     })
   }
 }

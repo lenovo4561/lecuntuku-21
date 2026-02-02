@@ -53,38 +53,41 @@
       "pages/Splash": {
         "component": "index"
       },
-      "pages/Main": {
+      "pkg_main/pages/Main": {
         "component": "index"
       },
-      "pages/Bizhi": {
+      "pkg_main/pages/Bizhi": {
         "component": "index"
       },
-      "pages/Touxiang": {
+      "pkg_main/pages/Touxiang": {
         "component": "index"
       },
-      "pages/Shoucang": {
+      "pkg_main/pages/Shoucang": {
         "component": "index"
       },
-      "pages/Mine": {
+      "pkg_main/pages/Mine": {
         "component": "index"
       },
-      "pages/Demo": {
+      "pkg_main/pages/Detail": {
         "component": "index"
       },
-      "pages/DemoDetail": {
+      "pkg_main/pages/TouxiangDetail": {
         "component": "index"
       },
-      "pages/Detail": {
+      "pkg_main/pages/TouxiangCategory": {
         "component": "index"
       },
-      "pages/TouxiangDetail": {
-        "component": "index"
-      },
-      "pages/Webview": {
+      "pkg_main/pages/Webview": {
         "component": "index"
       }
     }
   },
+  "subpackages": [
+    {
+      "name": "pkg_main",
+      "resource": "pkg_main"
+    }
+  ],
   "display": {
     "titleBarBackgroundColor": "#f2f2f2",
     "titleBarTextColor": "#414141",
@@ -94,48 +97,41 @@
         "titleBar": false,
         "menu": false
       },
-      "pages/Main": {
+      "pkg_main/pages/Main": {
         "titleBar": false,
         "menu": false
       },
-      "pages/Bizhi": {
+      "pkg_main/pages/Bizhi": {
         "titleBarText": "壁纸",
         "menu": false
       },
-      "pages/Touxiang": {
+      "pkg_main/pages/Touxiang": {
         "titleBarText": "头像",
         "menu": false
       },
-      "pages/Shoucang": {
+      "pkg_main/pages/Shoucang": {
         "titleBar": false,
         "menu": false
       },
-      "pages/Mine": {
+      "pkg_main/pages/Mine": {
         "titleBarText": "我的",
         "menu": false
       },
-      "pages/Demo": {
-        "titleBarText": "快应用示例模版",
-        "menu": false
-      },
-      "pages/DemoDetail": {
-        "titleBarText": "详情页"
-      },
-      "pages/Detail": {
+      "pkg_main/pages/Detail": {
         "titleBar": false,
         "menu": false,
         "fullScreen": true
       },
-      "pages/TouxiangDetail": {
+      "pkg_main/pages/TouxiangDetail": {
         "titleBar": false,
         "menu": false,
         "fullScreen": true
       },
-      "pages/TouxiangCategory": {
+      "pkg_main/pages/TouxiangCategory": {
         "titleBar": false,
         "menu": false
       },
-      "pages/Webview": {
+      "pkg_main/pages/Webview": {
         "titleBarText": "",
         "menu": true
       }

@@ -1,0 +1,71 @@
+{
+  "app": {
+    "name": "乐存图库"
+  },
+  "tabs": {
+    "wallpaper": "壁纸",
+    "avatar": "头像",
+    "favorite": "收藏",
+    "mine": "我的"
+  },
+  "categories": {
+    "latest": "最新",
+    "hot": "热门",
+    "anime": "动漫",
+    "character": "人物",
+    "pet": "萌宠",
+    "nature": "自然"
+  },
+  "actions": {
+    "download": "下载",
+    "like": "收藏",
+    "liked": "已收藏",
+    "cancel": "取消",
+    "confirm": "确认",
+    "share": "分享",
+    "agree": "同意并继续",
+    "disagree": "不同意"
+  },
+  "messages": {
+    "noFavorites": "暂无收藏~",
+    "downloadStart": "开始下载...",
+    "downloadSuccess": "下载成功",
+    "downloadFail": "下载失败",
+    "saveSuccess": "保存成功",
+    "saveFail": "保存失败",
+    "addedToFavorites": "已添加到收藏",
+    "removedFromFavorites": "已取消收藏",
+    "imageInfoIncomplete": "图片信息不完整"
+  },
+  "wallpaper": {
+    "title": "壁纸",
+    "latestTitle": "最新壁纸",
+    "updated": "更新",
+    "sheets": "张"
+  },
+  "avatar": {
+    "title": "头像",
+    "latestTitle": "最新头像",
+    "updated": "更新",
+    "sheets": "张"
+  },
+  "favorite": {
+    "title": "收藏",
+    "wallpaperTab": "壁纸收藏",
+    "avatarTab": "头像收藏",
+    "emptyHint": "暂无收藏~"
+  },
+  "mine": {
+    "title": "我的",
+    "username": "钱若晴",
+    "services": "服务",
+    "aboutUs": "关于我们",
+    "privacy": "隐私协议",
+    "userAgreement": "用户协议"
+  },
+  "privacy": {
+    "title": "用户协议及隐私政策",
+    "userAgreement": "用户协议",
+    "privacyPolicy": "隐私政策"
+  }
+}

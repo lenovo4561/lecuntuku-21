@@ -18,7 +18,7 @@
       <div class="tab-item" onclick="clickTab(0)">
         <image
           class="tab-icon"
-          src="{{currentIndex === 0 ? '/assets/img/shouji-s.png' : '/assets/img/shouji-u.png'}}"
+          src="{{currentIndex === 0 ? '../../assets/img/shouji-s.png' : '../../assets/img/shouji-u.png'}}"
         ></image>
         <text
           class="tab-text"
@@ -28,7 +28,7 @@
       <div class="tab-item" onclick="clickTab(1)">
         <image
           class="tab-icon"
-          src="{{currentIndex === 1 ? '/assets/img/touxiang-s.png' : '/assets/img/touxiang-u.png'}}"
+          src="{{currentIndex === 1 ? '../../assets/img/touxiang-s.png' : '../../assets/img/touxiang-u.png'}}"
         ></image>
         <text
           class="tab-text"
@@ -38,7 +38,7 @@
       <div class="tab-item" onclick="clickTab(2)">
         <image
           class="tab-icon"
-          src="{{currentIndex === 2 ? '/assets/img/shoucang-s.png' : '/assets/img/shoucang-u.png'}}"
+          src="{{currentIndex === 2 ? '../../assets/img/shoucang-s.png' : '../../assets/img/shoucang-u.png'}}"
         ></image>
         <text
           class="tab-text"
@@ -48,7 +48,7 @@
       <div class="tab-item" onclick="clickTab(3)">
         <image
           class="tab-icon"
-          src="{{currentIndex === 3 ? '/assets/img/mine-s.png' : '/assets/img/mine-u.png'}}"
+          src="{{currentIndex === 3 ? '../../assets/img/mine-s.png' : '../../assets/img/mine-u.png'}}"
         ></image>
         <text
           class="tab-text"
@@ -63,7 +63,6 @@
 import device from '@system.device'
 import app from '@system.app'
 import storage from '@system.storage'
-const $apis = require('../../helper/apis/index').default
 
 export default {
   private: {

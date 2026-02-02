@@ -4,7 +4,7 @@
       <!-- 顶部 Header 区域 -->
       <list-item type="header" class="header-item">
         <div class="header-box">
-          <image class="header-bg" src="/assets/img/touxiang-bg.png"></image>
+          <image class="header-bg" src="/pkg_main/assets/img/touxiang-bg.png"></image>
         </div>
       </list-item>
 
@@ -12,25 +12,25 @@
       <list-item type="categories" class="categories-item">
         <div class="category-grid">
           <div class="category-card anime-card" onclick="openCategory('anime')">
-            <image class="category-img" src="/assets/img/dm.png"></image>
+            <image class="category-img" src="/pkg_main/assets/img/dm.png"></image>
           </div>
           <div class="category-card pet-card" onclick="openCategory('pet')">
-            <image class="category-img" src="/assets/img/mc.png"></image>
+            <image class="category-img" src="/pkg_main/assets/img/mc.png"></image>
           </div>
           <div class="category-card person-card" onclick="openCategory('person')">
-             <image class="category-img" src="/assets/img/rw.png"></image>
+             <image class="category-img" src="/pkg_main/assets/img/rw.png"></image>
           </div>
           <div class="category-card couple-card" onclick="openCategory('couple')">
-             <image class="category-img" src="/assets/img/ql.png"></image>
+             <image class="category-img" src="/pkg_main/assets/img/ql.png"></image>
           </div>
         </div>
       </list-item>
 
-      <!-- 最新头像标题 -->
+      <!-- 最新头像标题-->
       <list-item type="section-title" class="section-title-item">
         <div class="section-title-box">
           <div class="section-left">
-            <image class="new-icon" src="/assets/img/new.png"></image>
+            <image class="new-icon" src="/pkg_main/assets/img/new.png"></image>
             <text class="section-title-text">最新头像</text>
           </div>
           <text class="section-right-text">更新 12 张</text>
@@ -66,7 +66,7 @@ export default {
     this.avatarList = []
     for (let i = 1; i <= 20; i++) {
       this.avatarList.push({
-        url: `https://cdn.shijinzhuang.com/qcloud/tx/rm/${i}.jpg`,
+        url: `https://cdn.shijinzhuang.com/quick/lecuntk/tx/zx/${i}.jpg`,
         id: i
       })
     }
@@ -75,13 +75,23 @@ export default {
     console.log('Touxiang page onShow')
   },
   openCategory(type) {
-    prompt.showToast({
-      message: '点击了分类: ' + type
+    let title = '分类'
+    if (type === 'anime') title = '动漫头像'
+    else if (type === 'pet') title = '萌宠头像'
+    else if (type === 'person') title = '人物头像'
+    else if (type === 'couple') title = '情侣头像'
+    
+    router.push({
+      uri: '/pkg_main/pages/TouxiangCategory',
+      params: {
+        type: type,
+        title: title
+      }
     })
   },
   openDetail(index) {
     router.push({
-      uri: '/pages/TouxiangDetail',
+      uri: '/pkg_main/pages/TouxiangDetail',
       params: {
         avatarData: JSON.stringify(this.avatarList),
         startindex: index

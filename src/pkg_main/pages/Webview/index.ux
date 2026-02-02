@@ -26,22 +26,17 @@ export default {
   },
 
   onInit() {
-    console.log('Webview页面初始化')
-    console.log('URL:', this.url)
-    console.log('标题:', this.title)
-
-    // 设置标题栏
     if (this.title) {
       try {
         this.$page.setTitleBar({ text: this.title })
       } catch (e) {
-        console.error('setTitleBar error:', e)
+
       }
     }
   },
 
   onBackPress() {
-    console.log('onBackPress triggered')
+
     if (this.isBacking) {
       return true
     }
@@ -51,14 +46,14 @@ export default {
     if (webElement) {
       webElement.canBack({
         callback: (canBack) => {
-          console.log('canBack result:', canBack)
+
           if (canBack) {
             webElement.back()
             setTimeout(() => {
               this.isBacking = false
             }, 300)
           } else {
-            console.log('Executing router.back()')
+
             router.back()
           }
         }
@@ -71,11 +66,10 @@ export default {
   },
 
   onPageStart() {
-    console.log('页面开始加载')
   },
 
   onPageFinish() {
-    console.log('页面加载完成')
+
     const webElement = this.$element('web')
     if (webElement && webElement.executeScript) {
       try {
@@ -99,17 +93,17 @@ export default {
         `
         })
       } catch (e) {
-        console.error('executeScript error:', e)
+
       }
     }
   },
 
   onDestroy() {
-    console.log('Webview页面销毁')
+
   },
 
   onError(evt) {
-    console.error('页面加载错误:', evt.detail)
+
   }
 }
 </script>

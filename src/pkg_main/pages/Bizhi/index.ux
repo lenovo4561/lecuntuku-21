@@ -4,7 +4,7 @@
       <!-- 顶部 Header 区域 -->
       <list-item type="header" class="header-item">
         <div class="header-box">
-          <image class="header-bg" src="/assets/img/bizhi-bg.png"></image>
+          <image class="header-bg" src="/pkg_main/assets/img/bizhi-bg.png"></image>
         </div>
       </list-item>
 
@@ -59,11 +59,26 @@ export default {
     console.log('Bizhi page onShow')
   },
   loadWallpapers() {
-    // 生成1-20的壁纸URL列表
+    // 根据当前 tab 生成不同的壁纸 URL 列表
     const wallpaperList = []
-    for (let i = 1; i <= 20; i++) {
+    let baseUrl = ''
+    
+    // 根据 currentTab 选择不同的 URL 前缀
+    if (this.currentTab === 0) {
+      // 热门推荐
+      baseUrl = 'https://cdn.shijinzhuang.com/quick/lecuntk/bz/rmtj/'
+    } else if (this.currentTab === 1) {
+      // 猜你喜欢
+      baseUrl = 'https://cdn.shijinzhuang.com/quick/lecuntk/bz/cnxh/'
+    } else if (this.currentTab === 2) {
+      // 创意壁纸
+      baseUrl = 'https://cdn.shijinzhuang.com/quick/lecuntk/bz/cybz/'
+    }
+    
+    // 生成1-24的壁纸URL列表
+    for (let i = 1; i <= 24; i++) {
       wallpaperList.push({
-        url: `https://cdn.shijinzhuang.com/qcloud/bz/rm/${i}.jpg`,
+        url: `${baseUrl}${i}.jpg`,
         id: i
       })
     }
@@ -81,7 +96,8 @@ export default {
   },
   switchTab(index) {
     this.currentTab = index;
-    // 这里可以添加加载不同数据的逻辑
+    // 切换 tab 时重新加载壁纸数据
+    this.loadWallpapers();
   },
   openDetail(item, index) {
     // 合并左右列表为完整列表
@@ -98,7 +114,7 @@ export default {
     })
     
     router.push({
-      uri: '/pages/Detail',
+      uri: '/pkg_main/pages/Detail',
       params: {
         wallpaperData: JSON.stringify(allList),
         startindex: clickedIndex >= 0 ? clickedIndex : 0
@@ -154,7 +170,7 @@ export default {
 }
 
 .tab-btn {
-  background-color: #e6e0f0; /* 浅紫色背景 */
+  background-color: #e6e0f0; /* 浅紫色背�?*/
   border-radius: 20px;
   padding: 8px 14px;
   justify-content: center;

@@ -5,7 +5,7 @@
       <list-item type="header" class="header-item">
         <div class="header-box">
           <stack style="width: 100%; height: 100%;">
-            <image class="header-bg" src="/assets/img/shoucang-bg.png"></image>
+            <image class="header-bg" src="/pkg_main/assets/img/shoucang-bg.png"></image>
             <div class="tabs-container">
               <div class="tab-btn {{currentTab === 'wallpaper' ? 'tab-active' : 'tab-normal'}}" onclick="switchTab('wallpaper')">
                 <text class="{{currentTab === 'wallpaper' ? 'text-active' : 'text-normal'}}">壁纸</text>
@@ -21,7 +21,7 @@
       <!-- 暂无收藏 -->
       <list-item type="empty" class="empty-item" if="{{isEmpty}}">
         <div class="empty-container">
-           <image class="empty-img" src="/assets/img/shoucang-kong.png"></image>
+           <image class="empty-img" src="/pkg_main/assets/img/shoucang-kong.png"></image>
            <text class="empty-text">暂无收藏~</text>
         </div>
       </list-item>
@@ -150,7 +150,7 @@ export default {
     
     if (item.type === 'wallpaper') {
       router.push({
-        uri: '/pages/Detail',
+        uri: '/pkg_main/pages/Detail',
         params: {
           imageUrl: item.url,
           tag: item.tag
@@ -158,7 +158,7 @@ export default {
       })
     } else {
       router.push({
-        uri: '/pages/TouxiangDetail',
+        uri: '/pkg_main/pages/TouxiangDetail',
         params: {
           imageUrl: item.url,
           tag: item.tag
