@@ -1,9 +1,10 @@
 <template>
   <div class="page">
     <stack class="stack-container">
-      <!-- 背景层：高斯模糊 -->
+      <!-- 背景层：高斯模糊，绑定当前图片 -->
       <div class="background-layer">
-        <image class="bg-image" src="/assets/img/touxiang-bg.png"></image>
+        <image if="{{getCurrentAvatar().url}}" class="bg-image" src="{{getCurrentAvatar().url}}"></image>
+        <div if="{{!getCurrentAvatar().url}}" class="bg-image" style="background-color: {{getCurrentAvatar().color || '#333333'}};"></div>
         <div class="blur-mask"></div>
       </div>
 
@@ -18,17 +19,44 @@
           <div class="placeholder-right"></div>
         </div>
 
-        <!-- 中间 Swiper 区域 -->
+        <!-- 中间 Swiper 区域，带左右预览 -->
         <div class="swiper-container">
-           <swiper class="swiper" index="{{currentIndex}}" onchange="onSwiperChange" indicator="false" loop="true" previous-margin="50px" next-margin="50px">
-             <div class="swiper-item" for="{{(index, item) in avatarList}}">
-               <div class="avatar-card">
-                 <div class="placeholder-img">
-                   <text class="placeholder-text">头像 {{index + 1}}</text>
-                 </div>
-               </div>
-             </div>
-           </swiper>
+          <!-- 左侧预览：上一张头像 -->
+          <div class="side-preview left-preview">
+            <stack class="side-inner">
+              <image if="{{getPrevItem().url}}" class="side-img" src="{{getPrevItem().url}}"></image>
+              <div if="{{!getPrevItem().url}}" class="side-bg" style="background-color: {{getPrevItem().color || '#dddddd'}};">
+                <text class="side-text">{{getPrevIndex() + 1}}</text>
+              </div>
+            </stack>
+          </div>
+
+          <!-- 中间主图 -->
+          <swiper class="swiper" 
+                  index="{{currentIndex}}" 
+                  onchange="onSwiperChange" 
+                  indicator="false" 
+                  loop="true">
+            <div class="swiper-item" for="{{(index, item) in avatarList}}">
+              <div class="avatar-card">
+                <!-- 正方形主图，如果有url则显示真实图片 -->
+                <image if="{{item.url}}" class="main-img-real" src="{{item.url}}"></image>
+                <div if="{{!item.url}}" class="main-img" style="background-color: {{item.color}};">
+                  <text class="img-text">{{index + 1}}</text>
+                </div>
+              </div>
+            </div>
+          </swiper>
+
+          <!-- 右侧预览：下一张头像 -->
+          <div class="side-preview right-preview">
+            <stack class="side-inner">
+              <image if="{{getNextItem().url}}" class="side-img" src="{{getNextItem().url}}"></image>
+              <div if="{{!getNextItem().url}}" class="side-bg" style="background-color: {{getNextItem().color || '#dddddd'}};">
+                <text class="side-text">{{getNextIndex() + 1}}</text>
+              </div>
+            </stack>
+          </div>
         </div>
 
         <!-- 底部操作栏 -->
@@ -41,8 +69,8 @@
           
           <!-- 喜欢按钮 -->
           <div class="action-btn like-btn" onclick="handleLike">
-            <image class="btn-icon" src="/assets/img/like-s.png"></image>
-            <text class="btn-text">喜欢</text>
+            <image class="btn-icon" src="{{isLiked ? '/assets/img/like-s.png' : '/assets/img/like-u.png'}}"></image>
+            <text class="btn-text">{{isLiked ? '已收藏' : '收藏'}}</text>
           </div>
         </div>
       </div>
@@ -53,35 +81,259 @@
 <script>
 import router from '@system.router'
 import prompt from '@system.prompt'
+import storage from '@system.storage'
+import request from '@system.request'
+import media from '@system.media'
 
 export default {
   protected: {
-    startindex: 0
+    startindex: 0,
+    imageUrl: '',
+    tag: '',
+    avatarData: ''
   },
   private: {
     currentIndex: 0,
     totalCount: 20,
-    avatarList: Array.from({ length: 20 }, (_, i) => i) // 生成20个占位数据
+    avatarList: [],
+    isLiked: false
   },
   onInit() {
-    if (this.startindex) {
-      this.currentIndex = parseInt(this.startindex)
+    // 优先级1: 如果传入了avatarData（从Touxiang页面跳转）
+    if (this.avatarData) {
+      try {
+        this.avatarList = JSON.parse(this.avatarData)
+        this.totalCount = this.avatarList.length
+        this.currentIndex = this.startindex ? parseInt(this.startindex) : 0
+      } catch (e) {
+        console.error('Parse avatarData error:', e)
+        this.initDefaultAvatars()
+      }
     }
+    // 优先级2: 如果传入了imageUrl（从收藏页面跳转）
+    else if (this.imageUrl) {
+      this.avatarList = [{ url: this.imageUrl, tag: this.tag || '头像' }]
+      this.totalCount = 1
+      this.currentIndex = 0
+    }
+    // 优先级3: 使用默认占位符
+    else {
+      this.initDefaultAvatars()
+      if (this.startindex) {
+        this.currentIndex = parseInt(this.startindex)
+      }
+    }
+    this.checkIfLiked()
+  },
+  initDefaultAvatars() {
+    // 模拟图片列表，使用不同颜色的占位符
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8', '#00b894', '#fab1a0', '#74b9ff', '#a29bfe'];
+    this.avatarList = Array.from({ length: 20 }, (_, i) => ({
+       src: '/assets/img/touxiang-bg.png',
+       color: colors[i % colors.length]
+    }));
+    this.totalCount = this.avatarList.length;
   },
   onSwiperChange(e) {
     this.currentIndex = e.index
+    this.checkIfLiked()
+  },
+  getCurrentAvatar() {
+    return this.avatarList[this.currentIndex] || {}
+  },
+  getPrevIndex() {
+    const len = this.avatarList.length
+    return (this.currentIndex - 1 + len) % len
+  },
+  getNextIndex() {
+    const len = this.avatarList.length
+    return (this.currentIndex + 1) % len
+  },
+  getPrevItem() {
+    return this.avatarList[this.getPrevIndex()] || {}
+  },
+  getNextItem() {
+    return this.avatarList[this.getNextIndex()] || {}
+  },
+  getPrevColor() {
+    const item = this.avatarList[this.getPrevIndex()]
+    return item.color || item.url || '#dddddd'
+  },
+  getNextColor() {
+    const item = this.avatarList[this.getNextIndex()]
+    return item.color || item.url || '#dddddd'
   },
   goBack() {
     router.back()
   },
   handleDownload() {
+    const self = this
+    const currentItem = this.avatarList[this.currentIndex]
+    
+    if (!currentItem || !currentItem.url) {
+      prompt.showToast({
+        message: '暂无图片下载'
+      })
+      return
+    }
+    
     prompt.showToast({
       message: '开始下载...'
     })
+    
+    // 对 URL 中的空格进行编码
+    const encodedUrl = currentItem.url.replace(/\s/g, '%20')
+    
+    request.download({
+      url: encodedUrl,
+      success: function(data) {
+        console.info('Download success, token:', data.token)
+        // 处理下载完成的文件
+        request.onDownloadComplete({
+          token: data.token,
+          success: function(ret) {
+            console.info('Download complete, path:', ret.uri)
+            // 保存到相册
+            media.saveToPhotosAlbum({
+              uri: ret.uri,
+              success: function() {
+                prompt.showToast({
+                  message: '下载成功'
+                })
+              },
+              fail: function(data, code) {
+                console.error('Save to album failed:', data, code)
+                prompt.showToast({
+                  message: '保存失败，请检查权限'
+                })
+              }
+            })
+          },
+          fail: function(data, code) {
+            console.error('Download complete check failed:', data, code)
+            prompt.showToast({
+              message: '下载失败'
+            })
+          }
+        })
+      },
+      fail: function(data, code) {
+        console.error('Download request failed:', data, code)
+        prompt.showToast({
+          message: '下载请求失败: ' + code
+        })
+      }
+    })
+  },
+  checkIfLiked() {
+    const self = this
+    const currentItem = this.avatarList[this.currentIndex]
+    if (!currentItem || (!currentItem.url && !currentItem.color)) {
+      return
+    }
+    const itemUrl = currentItem.url || currentItem.color
+    storage.get({
+      key: 'favorites',
+      success: function(data) {
+        if (data) {
+          try {
+            const favorites = JSON.parse(data)
+            self.isLiked = favorites.some(function(item) {
+              return item.url === itemUrl && item.type === 'avatar'
+            })
+          } catch (e) {
+            self.isLiked = false
+          }
+        }
+      },
+      fail: function() {
+        self.isLiked = false
+      }
+    })
   },
   handleLike() {
-    prompt.showToast({
-      message: '已添加到喜欢'
+    const self = this
+    const currentItem = this.avatarList[this.currentIndex]
+    if (!currentItem || (!currentItem.url && !currentItem.color)) {
+      prompt.showToast({
+        message: '图片信息不完整'
+      })
+      return
+    }
+    
+    const itemUrl = currentItem.url || currentItem.color
+    const itemTag = currentItem.tag || ('头像 ' + (self.currentIndex + 1))
+    
+    storage.get({
+      key: 'favorites',
+      success: function(data) {
+        let favorites = []
+        if (data) {
+          try {
+            favorites = JSON.parse(data)
+          } catch (e) {
+            favorites = []
+          }
+        }
+
+        if (self.isLiked) {
+          // 取消收藏
+          favorites = favorites.filter(function(item) {
+            return !(item.url === itemUrl && item.type === 'avatar')
+          })
+          self.isLiked = false
+          prompt.showToast({
+            message: '已取消收藏'
+          })
+        } else {
+          // 添加收藏
+          const newItem = {
+            url: itemUrl,
+            tag: itemTag,
+            type: 'avatar'
+          }
+          favorites.push(newItem)
+          self.isLiked = true
+          prompt.showToast({
+            message: '已添加到收藏'
+          })
+        }
+
+        storage.set({
+          key: 'favorites',
+          value: JSON.stringify(favorites),
+          success: function() {
+            console.log('收藏保存成功')
+          },
+          fail: function(err) {
+            console.log('收藏保存失败:', err)
+          }
+        })
+      },
+      fail: function() {
+        // 首次添加
+        const favorites = [
+          {
+            url: itemUrl,
+            tag: itemTag,
+            type: 'avatar'
+          }
+        ]
+        storage.set({
+          key: 'favorites',
+          value: JSON.stringify(favorites),
+          success: function() {
+            console.log('收藏保存成功')
+          },
+          fail: function(err) {
+            console.log('收藏保存失败:', err)
+          }
+        })
+        self.isLiked = true
+        prompt.showToast({
+          message: '已添加到收藏'
+        })
+      }
     })
   }
 }
@@ -92,6 +344,7 @@ export default {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  background-color: #000000;
 }
 
 .stack-container {
@@ -110,13 +363,13 @@ export default {
   width: 100%;
   height: 100%;
   resize-mode: cover;
-  filter: blur(20px); /* 高斯模糊效果 */
+  filter: blur(25px); /* 磨砂效果 */
 }
 
 .blur-mask {
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.3); /* 轻微遮罩确保文字可见 */
+  background-color: rgba(0, 0, 0, 0.3); /* 暗色遮罩 */
   position: absolute;
 }
 
@@ -131,20 +384,21 @@ export default {
 /* 顶部栏 */
 .top-bar {
   width: 100%;
-  height: 80px;
+  height: 100px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding-left: 20px;
-  padding-right: 20px;
-  padding-top: 30px; /* 沉浸式状态栏预留 */
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 5px; 
+  margin-top:-25px
 }
 
 .back-btn {
-  width: 36px;
-  height: 36px;
+  width: 20px;
+  height: 20px;
   background-color: #ffffff;
-  border-radius: 18px;
+  border-radius: 12px;
   justify-content: center;
   align-items: center;
 }
@@ -155,25 +409,71 @@ export default {
 }
 
 .counter-text {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
-  color: #000000;
+  color: #ffffff;
 }
 
 .placeholder-right {
-  width: 36px;
+  width: 44px;
 }
 
 /* 中间轮播 */
 .swiper-container {
   flex: 1;
   width: 100%;
+  flex-direction: row;
+  align-items: center;
+}
+
+.side-preview {
+  width: 20px;
+  height: 100%;
   justify-content: center;
+  align-items: center;
+  padding-top: 105px;
+  padding-bottom: 140px;
+}
+
+.left-preview {
+  padding-left: 0;
+  padding-right: 4px;
+}
+
+.right-preview {
+  padding-left: 4px;
+  padding-right: 0;
+}
+
+.side-inner {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.side-img {
+  width: 100%;
+  height: 100%;
+  resize-mode: cover;
+}
+
+.side-bg {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.side-text {
+  color: #ffffff;
+  font-size: 10px;
 }
 
 .swiper {
-  width: 100%;
-  height: 400px; /* 根据头像比例调整 */
+  flex: 1;
+  height: 100%;
 }
 
 .swiper-item {
@@ -184,65 +484,73 @@ export default {
 }
 
 .avatar-card {
-  width: 90%;
-  height: 90%; 
-  /* 让卡片比swiper item稍小，产生间距效果，或者依赖 margin */
+  width: 100%; 
+  height: 100%; 
   justify-content: center;
   align-items: center;
+  padding: 85px 0 120px 0;
 }
 
-.placeholder-img {
+/* 正方形主图 */
+.main-img {
   width: 100%;
-  height: 100%; /* 保持正方形或其他比例 */
-  background-color: #e0e0e0;
-  border-radius: 12px;
+  height: 100%;
   justify-content: center;
   align-items: center;
 }
 
-.placeholder-text {
-  color: #999999;
-  font-size: 20px;
+.main-img-real {
+  width: 100%;
+  height: 100%;
+  resize-mode: cover;
+}
+
+.img-text {
+  color: #ffffff;
+  font-size: 48px;
+  font-weight: bold;
 }
 
 /* 底部操作栏 */
 .bottom-bar {
+  position: absolute;
+  bottom: 25px;
+  left: 0;
   width: 100%;
-  height: 100px;
   padding-left: 20px;
   padding-right: 20px;
-  padding-bottom: 20px;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 
 .action-btn {
-  width: 140px;
-  height: 44px;
-  border-radius: 22px;
+  width: 110px;
+  height: 34px;
+  border-radius: 17px;
   flex-direction: row;
   justify-content: center;
   align-items: center;
 }
 
 .download-btn {
-  background-color: #332266; /* 深紫色近似UI */
+  background-color: #332266;
+  margin-right: 15px;
 }
 
 .like-btn {
-  background-color: #ff4455; /* 红色近似UI */
+  background-color: #ff4455;
 }
 
 .btn-icon {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
 }
 
 .btn-text {
   color: #ffffff;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: bold;
 }
 </style>

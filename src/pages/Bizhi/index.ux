@@ -28,16 +28,12 @@
         <div class="wallpaper-grid">
           <div class="wallpaper-column">
             <div class="wallpaper-card" for="{{(index, item) in leftList}}" onclick="openDetail(item, index)">
-               <div class="placeholder-img">
-                 <text class="placeholder-text">图片占位</text>
-               </div>
+               <image class="wallpaper-img" src="{{item.url}}"></image>
             </div>
           </div>
           <div class="wallpaper-column">
             <div class="wallpaper-card" for="{{(index, item) in rightList}}" onclick="openDetail(item, index)">
-               <div class="placeholder-img">
-                 <text class="placeholder-text">图片占位</text>
-               </div>
+               <image class="wallpaper-img" src="{{item.url}}"></image>
             </div>
           </div>
         </div>
@@ -52,24 +48,60 @@ import router from '@system.router'
 export default {
   data: {
     currentTab: 0,
-    leftList: [1, 2, 3, 4], // 占位数据
-    rightList: [1, 2, 3, 4] // 占位数据
+    leftList: [],
+    rightList: []
   },
   onInit() {
     console.log('Bizhi page initialized')
+    this.loadWallpapers()
   },
   onShow() {
     console.log('Bizhi page onShow')
+  },
+  loadWallpapers() {
+    // 生成1-20的壁纸URL列表
+    const wallpaperList = []
+    for (let i = 1; i <= 20; i++) {
+      wallpaperList.push({
+        url: `https://cdn.shijinzhuang.com/qcloud/bz/rm/${i}.jpg`,
+        id: i
+      })
+    }
+    
+    // 分配到左右两列
+    this.leftList = []
+    this.rightList = []
+    wallpaperList.forEach((item, index) => {
+      if (index % 2 === 0) {
+        this.leftList.push(item)
+      } else {
+        this.rightList.push(item)
+      }
+    })
   },
   switchTab(index) {
     this.currentTab = index;
     // 这里可以添加加载不同数据的逻辑
   },
   openDetail(item, index) {
+    // 合并左右列表为完整列表
+    const allList = []
+    const maxLen = Math.max(this.leftList.length, this.rightList.length)
+    for (let i = 0; i < maxLen; i++) {
+      if (this.leftList[i]) allList.push(this.leftList[i])
+      if (this.rightList[i]) allList.push(this.rightList[i])
+    }
+    
+    // 找到点击的图片在完整列表中的索引
+    const clickedIndex = allList.findIndex(function(listItem) {
+      return listItem.id === item.id
+    })
+    
     router.push({
       uri: '/pages/Detail',
       params: {
-        startindex: index // 简单传递索引，实际可能需要传递ID列表等
+        wallpaperData: JSON.stringify(allList),
+        startindex: clickedIndex >= 0 ? clickedIndex : 0
       }
     })
   }
@@ -109,7 +141,10 @@ export default {
   width: 100%;
   padding-left: 5px;
   padding-right: 5px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  margin-top: -45px;
+  position: relative;
+  z-index: 10;
 }
 
 .tabs-box {
@@ -173,16 +208,8 @@ export default {
   overflow: hidden;
 }
 
-.placeholder-img {
+.wallpaper-img {
   width: 100%;
   height: 100%;
-  background-color: #e0e0e0;
-  justify-content: center;
-  align-items: center;
-}
-
-.placeholder-text {
-  color: #999999;
-  font-size: 12px;
 }
 </style>

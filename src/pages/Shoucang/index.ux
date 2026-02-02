@@ -1,20 +1,40 @@
 <template>
   <div class="shoucang-page">
-    <div class="header-box">
-      <image class="header-bg" src="/assets/img/shoucang-bg.png"></image>
-    </div>
-    
-    <!-- 暂无收藏 -->
-    <div class="empty-container" if="{{isEmpty}}">
-       <image class="empty-img" src="/assets/img/shoucang-kong.png"></image>
-       <text class="empty-text">暂无收藏~</text>
-    </div>
+    <list class="full-list">
+      <!-- 顶部背景区域 -->
+      <list-item type="header" class="header-item">
+        <div class="header-box">
+          <stack style="width: 100%; height: 100%;">
+            <image class="header-bg" src="/assets/img/shoucang-bg.png"></image>
+            <div class="tabs-container">
+              <div class="tab-btn {{currentTab === 'wallpaper' ? 'tab-active' : 'tab-normal'}}" onclick="switchTab('wallpaper')">
+                <text class="{{currentTab === 'wallpaper' ? 'text-active' : 'text-normal'}}">壁纸</text>
+              </div>
+              <div class="tab-btn {{currentTab === 'avatar' ? 'tab-active' : 'tab-normal'}}" onclick="switchTab('avatar')">
+                 <text class="{{currentTab === 'avatar' ? 'text-active' : 'text-normal'}}">头像</text>
+              </div>
+            </div>
+          </stack>
+        </div>
+      </list-item>
 
-    <!-- 收藏列表 -->
-    <list class="collection-list" if="{{!isEmpty}}">
-      <list-item type="collection-item" for="{{(index, item) in collectionList}}">
-        <div class="collection-item">
-          <image class="collection-img" src="{{item.src}}"></image>
+      <!-- 暂无收藏 -->
+      <list-item type="empty" class="empty-item" if="{{isEmpty}}">
+        <div class="empty-container">
+           <image class="empty-img" src="/assets/img/shoucang-kong.png"></image>
+           <text class="empty-text">暂无收藏~</text>
+        </div>
+      </list-item>
+
+      <!-- 收藏列表 -->
+      <list-item type="grid-row" for="{{gridRows}}" if="{{!isEmpty}}">
+        <div class="grid-row">
+          <div class="grid-item {{$item.left.type === 'avatar' ? 'grid-item-avatar' : 'grid-item-wallpaper'}}" onclick="goToDetail($item.left)">
+            <image class="item-img" src="{{$item.left.url}}"></image>
+          </div>
+          <div class="grid-item {{$item.right.type === 'avatar' ? 'grid-item-avatar' : 'grid-item-wallpaper'}}" if="{{$item.right}}" onclick="goToDetail($item.right)">
+            <image class="item-img" src="{{$item.right.url}}"></image>
+          </div>
         </div>
       </list-item>
     </list>
@@ -23,57 +43,128 @@
 
 <script>
 import storage from '@system.storage'
+import router from '@system.router'
 
 export default {
   data: {
+    currentTab: 'wallpaper',
     isEmpty: true,
-    collectionList: []
+    wallpaperList: [],
+    avatarList: [],
+    gridRows: []
   },
 
   onInit() {
     console.log('Shoucang page onInit')
-    this.loadCollections()
+    this.loadFavorites()
   },
 
   onShow() {
     console.log('Shoucang page onShow')
-    this.loadCollections()
+    this.loadFavorites()
+  },
+
+  switchTab(type) {
+    console.log('switchTab to:', type)
+    this.currentTab = type
+    this.updateDisplay()
   },
 
   refresh() {
     console.log('Shoucang page refresh called')
-    this.loadCollections()
+    this.loadFavorites()
   },
 
-  loadCollections() {
-    console.log('Loading collections from storage')
+  loadFavorites() {
     const self = this
+    console.log('Loading favorites from storage')
     storage.get({
-      key: 'collections',
+      key: 'favorites',
       success: function(data) {
         console.log('Storage get success:', data)
-        let collections = []
-        try {
-          if (typeof data === 'string' && data.trim()) {
-            collections = JSON.parse(data)
-          } else if (data === null || data === undefined || data === '') {
-            collections = []
+        if (data) {
+          try {
+            const favorites = JSON.parse(data)
+            console.log('Parsed favorites:', favorites.length, 'items')
+            // 分类
+            self.wallpaperList = favorites.filter(function(item) {
+              return item.type === 'wallpaper'
+            })
+            self.avatarList = favorites.filter(function(item) {
+              return item.type === 'avatar'
+            })
+            console.log('wallpaperList:', self.wallpaperList.length, 'avatarList:', self.avatarList.length)
+            // 更新显示
+            self.updateDisplay()
+          } catch (e) {
+            console.error('Parse favorites error:', e)
+            self.wallpaperList = []
+            self.avatarList = []
+            self.isEmpty = true
+            self.gridRows = []
           }
-        } catch (e) {
-          console.error('Parse collections error:', e)
-          collections = []
+        } else {
+          console.log('No favorites data')
+          self.wallpaperList = []
+          self.avatarList = []
+          self.isEmpty = true
+          self.gridRows = []
         }
-
-        self.collectionList = Array.isArray(collections) ? collections : []
-        self.isEmpty = self.collectionList.length === 0
-        console.log('Final count:', self.collectionList.length, 'isEmpty:', self.isEmpty)
       },
       fail: function(data, code) {
-        console.log('Get collections failed:', data, code)
-        self.collectionList = []
+        console.log('Get favorites failed:', data, code)
+        self.wallpaperList = []
+        self.avatarList = []
         self.isEmpty = true
+        self.gridRows = []
       }
     })
+  },
+
+  updateDisplay() {
+    console.log('updateDisplay called, currentTab:', this.currentTab)
+    const list = this.currentTab === 'wallpaper' ? this.wallpaperList : this.avatarList
+    console.log('List to display:', list ? list.length : 0, 'items')
+    this.updateGridRows(list)
+    this.isEmpty = !list || list.length === 0
+  },
+
+  updateGridRows(list) {
+    console.log('updateGridRows called with', list ? list.length : 0, 'items')
+    const rows = []
+    if (list && list.length > 0) {
+      for (let i = 0; i < list.length; i += 2) {
+        rows.push({
+          left: list[i],
+          right: list[i + 1] || null
+        })
+      }
+    }
+    this.gridRows = rows
+    console.log('gridRows updated:', this.gridRows.length, 'rows')
+  },
+
+  goToDetail(item) {
+    console.log('goToDetail:', item)
+    if (!item) return
+    
+    if (item.type === 'wallpaper') {
+      router.push({
+        uri: '/pages/Detail',
+        params: {
+          imageUrl: item.url,
+          tag: item.tag
+        }
+      })
+    } else {
+      router.push({
+        uri: '/pages/TouxiangDetail',
+        params: {
+          imageUrl: item.url,
+          tag: item.tag
+        }
+      })
+    }
   }
 }
 </script>
@@ -84,6 +175,15 @@ export default {
   width: 100%;
   height: 100%;
   background-color: #f8f8f8;
+}
+
+.full-list {
+  width: 100%;
+  height: 100%;
+}
+
+.header-item {
+  width: 100%;
 }
 
 .header-box {
@@ -97,17 +197,59 @@ export default {
   resize-mode: stretch;
 }
 
+.tabs-container {
+  width: 100%;
+  height: 100%;
+  padding-left: 12px;
+  padding-bottom: 10px;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.tab-btn {
+  width: 60px;
+  height: 28px;
+  border-radius: 14px;
+  justify-content: center;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.tab-active {
+  background-color: #000000;
+}
+
+.tab-normal {
+  background-color: #eaeaea;
+}
+
+.text-active {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.text-normal {
+  color: #999999;
+  font-size: 14px;
+}
+
+.empty-item {
+  width: 100%;
+}
+
 .empty-container {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  padding: 100px 0;
+  width: 100%;
 }
 
 .empty-img {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 10px;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 20px;
 }
 
 .empty-text {
@@ -115,20 +257,31 @@ export default {
   color: #999999;
 }
 
-.collection-list {
-  flex: 1;
+/* 网格布局 */
+.grid-row {
   width: 100%;
-  padding: 10px;
-}
-
-.collection-item {
-  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 10px;
   margin-bottom: 10px;
 }
 
-.collection-img {
+.grid-item {
+  width: 48%;
+  position: relative;
+}
+
+.grid-item-avatar {
+  height: 170px;
+}
+
+.grid-item-wallpaper {
+  height: 180px;
+}
+
+.item-img {
   width: 100%;
-  height: 200px;
+  height: 100%;
   border-radius: 8px;
   resize-mode: cover;
 }

@@ -32,6 +32,9 @@
     },
     {
       "name": "system.request"
+    },
+    {
+      "name": "system.media"
     }
   ],
   "permissions": [
@@ -75,6 +78,9 @@
         "component": "index"
       },
       "pages/TouxiangDetail": {
+        "component": "index"
+      },
+      "pages/Webview": {
         "component": "index"
       }
     }
@@ -124,6 +130,14 @@
         "titleBar": false,
         "menu": false,
         "fullScreen": true
+      },
+      "pages/TouxiangCategory": {
+        "titleBar": false,
+        "menu": false
+      },
+      "pages/Webview": {
+        "titleBarText": "",
+        "menu": true
       }
     }
   },

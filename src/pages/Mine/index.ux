@@ -2,12 +2,13 @@
   <div class="page">
     <!-- 顶部背景区域 -->
     <stack class="header-section">
-      <image class="top-bg" src="/assets/img/shouye-banner.png"></image>
+      <image class="top-bg-back" src="/assets/img/xiangqing-bg1.png"></image>
+      <image class="top-bg-img" src="/assets/img/kong.png"></image>
       
       <!-- 用户信息 -->
       <div class="user-section">
         <image class="avatar" src="/assets/img/tx.png"></image>
-        <text class="username">用户</text>
+        <text class="username">钱若霖</text>
       </div>
     </stack>
 
@@ -49,12 +50,22 @@ import router from '@system.router'
 
 export default {
   openAgreement() {
-    console.log('Open agreement')
-    // 可以根据需要实现用户协议页面
+    router.push({
+      uri: '/pages/Webview',
+      params: {
+        url: 'https://api.51dsp.cn/index/agreement.do?pn=com.jslecuntuku.storagelcjs',
+        title: '用户协议'
+      }
+    })
   },
   openPrivacy() {
-    console.log('Open privacy')
-    // 可以根据需要实现隐私政策页面
+    router.push({
+      uri: '/pages/Webview',
+      params: {
+        url: 'https://api.51dsp.cn/index/privacy.do?pn=com.jslecuntuku.storagelcjs',
+        title: '隐私政策'
+      }
+    })
   }
 }
 </script>
@@ -73,17 +84,26 @@ export default {
   height: 200px;
 }
 
-.top-bg {
+.top-bg-color {
   width: 100%;
   height: 100%;
-  resize-mode: stretch;
+  background-image: linear-gradient(to bottom, #6a85b6 0%, #bac8e0 100%);
+}
+
+.top-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: scale-down;
+  margin-left: 50px;
+  margin-top: -20px;
 }
 
 .user-section {
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   margin-top: 35px;
+  padding-left: 15px;
 }
 
 .avatar {
@@ -107,6 +127,8 @@ export default {
   border-top-left-radius: 7px;
   border-top-right-radius: 7px;
   padding: 9px;
+  position: relative;
+  z-index: 10;
 }
 
 .card-title {

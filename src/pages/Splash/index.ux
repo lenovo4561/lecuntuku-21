@@ -35,7 +35,6 @@
 import router from '@system.router'
 import storage from '@system.storage'
 import app from '@system.app'
-import webview from '@system.webview'
 
 export default {
   data: {
@@ -86,13 +85,21 @@ export default {
     }
   },
   openPrivacy() {
-    webview.loadUrl({
-      url: 'https://api.51dsp.cn/index/privacy.do?pn=com.jslecuntuku.storagelcjs'
+    router.push({
+      uri: '/pages/Webview',
+      params: {
+        url: 'https://api.51dsp.cn/index/privacy.do?pn=com.jslecuntuku.storagelcjs',
+        title: '隐私政策'
+      }
     })
   },
   openAgreement() {
-    webview.loadUrl({
-      url: 'https://api.51dsp.cn/index/agreement.do?pn=com.jslecuntuku.storagelcjs'
+    router.push({
+      uri: '/pages/Webview',
+      params: {
+        url: 'https://api.51dsp.cn/index/agreement.do?pn=com.jslecuntuku.storagelcjs',
+        title: '用户协议'
+      }
     })
   },
   onHide() {

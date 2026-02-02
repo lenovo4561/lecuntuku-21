@@ -41,9 +41,7 @@
       <list-item type="avatars" class="avatars-item">
         <div class="avatar-grid">
            <div class="avatar-item" for="{{(index, item) in avatarList}}" onclick="openDetail(index)">
-             <div class="placeholder-img">
-               <text class="placeholder-text">占位</text>
-             </div>
+             <image class="avatar-img" src="{{item.url}}"></image>
            </div>
         </div>
       </list-item>
@@ -57,10 +55,21 @@ import router from '@system.router'
 
 export default {
   data: {
-    avatarList: [1, 2, 3, 4, 5, 6, 7, 8] // 占位数据
+    avatarList: []
   },
   onInit() {
     console.log('Touxiang page initialized')
+    this.loadAvatars()
+  },
+  loadAvatars() {
+    // 生成1-20的头像URL列表
+    this.avatarList = []
+    for (let i = 1; i <= 20; i++) {
+      this.avatarList.push({
+        url: `https://cdn.shijinzhuang.com/qcloud/tx/rm/${i}.jpg`,
+        id: i
+      })
+    }
   },
   onShow() {
     console.log('Touxiang page onShow')
@@ -74,7 +83,8 @@ export default {
     router.push({
       uri: '/pages/TouxiangDetail',
       params: {
-        startindex: index 
+        avatarData: JSON.stringify(this.avatarList),
+        startindex: index
       }
     })
   }
@@ -113,9 +123,12 @@ export default {
 /* Categories */
 .categories-item {
   width: 100%;
-  padding-left: 15px;
-  padding-right: 15px;
+  padding-left: 5px;
+  padding-right: 5px;
   margin-bottom: 8px;
+  margin-top: -30px;
+  position: relative;
+  z-index: 10;
 }
 
 .category-grid {
@@ -125,10 +138,10 @@ export default {
 }
 
 .category-card {
-  width: 48%;
-  height: 80px;
+  width: 49%;
+  height: 58px;
   border-radius: 12px;
-  margin-bottom: 5px;
+  margin-bottom: 0px;
   justify-content: center;
   align-items: center;
 }
@@ -192,6 +205,7 @@ export default {
   width: 24px;
   height: 24px;
   margin-right: 5px;
+  margin-top:5px
 }
 
 .section-title-text {
@@ -208,8 +222,8 @@ export default {
 /* Avatar Grid */
 .avatars-item {
   width: 100%;
-  padding-left: 15px;
-  padding-right: 15px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .avatar-grid {
@@ -217,28 +231,20 @@ export default {
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
-  padding: 0 7px;
+  padding: 0;
 }
 
 .avatar-item {
-  width: 115px;
-  height: 115px;
+  width: 117px;
+  height: 117px;
   margin-bottom: 7px;
   border-radius: 5px;
   background-color: #f5f5f5;
   overflow: hidden;
 }
 
-.placeholder-img {
+.avatar-img {
   width: 100%;
   height: 100%;
-  background-color: #e0e0e0;
-  justify-content: center;
-  align-items: center;
-}
-
-.placeholder-text {
-  color: #999999;
-  font-size: 14px;
 }
 </style>
