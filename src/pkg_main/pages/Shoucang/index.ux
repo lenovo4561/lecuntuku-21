@@ -272,11 +272,11 @@ export default {
 }
 
 .grid-item-avatar {
-  height: 170px;
+  height: 110px;
 }
 
 .grid-item-wallpaper {
-  height: 180px;
+  height: 200px;
 }
 
 .item-img {

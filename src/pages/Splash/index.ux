@@ -78,11 +78,7 @@ export default {
   },
   handleDisagree() {
     console.log('用户点击不同意，退出应用')
-    try {
-      app.terminate()
-    } catch (e) {
-      console.error('退出应用失败:', e)
-    }
+    this.$app.exit()
   },
   openPrivacy() {
     router.push({
