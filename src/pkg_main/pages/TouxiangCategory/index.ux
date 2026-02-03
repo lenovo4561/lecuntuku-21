@@ -5,11 +5,10 @@
         <stack class="header-box">
           <image class="title-bg" src="/pkg_main/assets/img/xiangqing-bg1.png"></image>
           <div class="title-bar">
-            <div class="back-box" onclick="back">
+            <div class="back-box" onclick="goBack">
               <image class="back-icon" src="/pkg_main/assets/img/back.png"></image>
             </div>
             <text class="title">{{title}}</text>
-            <div class="back-box"></div>
           </div>
         </stack>
       </list-item>
@@ -39,7 +38,7 @@ export default {
   onInit() {
     this.loadData()
   },
-  back() {
+  goBack() {
     router.back()
   },
   loadData() {
@@ -109,12 +108,12 @@ export default {
   align-items: center;
   position: absolute;
   left: 15px;
-  top: 15px;
+  top: 3px;
   z-index: 10;
 }
 .back-icon {
-  width: 16px;
-  height: 16px;
+  width: 21px;
+  height: 21px;
   object-fit: contain;
 }
 .title {

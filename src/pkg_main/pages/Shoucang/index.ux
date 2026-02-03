@@ -149,19 +149,21 @@ export default {
     if (!item) return
     
     if (item.type === 'wallpaper') {
+      const index = this.wallpaperList.findIndex(i => i.url === item.url)
       router.push({
         uri: '/pkg_main/pages/Detail',
         params: {
-          imageUrl: item.url,
-          tag: item.tag
+          startindex: index !== -1 ? index : 0,
+          wallpaperData: JSON.stringify(this.wallpaperList)
         }
       })
     } else {
+      const index = this.avatarList.findIndex(i => i.url === item.url)
       router.push({
         uri: '/pkg_main/pages/TouxiangDetail',
         params: {
-          imageUrl: item.url,
-          tag: item.tag
+          startindex: index !== -1 ? index : 0,
+          avatarData: JSON.stringify(this.avatarList)
         }
       })
     }

@@ -1,77 +1,46 @@
 <template>
   <div class="page">
     <stack class="stack-container">
-      <!-- 背景层：高斯模糊，绑定当前图片-->
+      <!-- 背景层：高斯模糊，绑定当前图片 (保留原有逻辑) -->
       <div class="background-layer">
-        <image if="{{getCurrentAvatar().url}}" class="bg-image" src="{{getCurrentAvatar().url}}"></image>
-        <div if="{{!getCurrentAvatar().url}}" class="bg-image" style="background-color: {{getCurrentAvatar().color || '#333333'}};"></div>
+        <image if="{{avatarList[currentIndex] && avatarList[currentIndex].url}}" class="bg-image" src="{{avatarList[currentIndex].url}}"></image>
+        <div if="{{!avatarList[currentIndex] || !avatarList[currentIndex].url}}" class="bg-image" style="background-color: {{ (avatarList[currentIndex] && avatarList[currentIndex].color) || '#333333'}};"></div>
         <div class="blur-mask"></div>
       </div>
 
-      <!-- 内容层-->
-      <div class="content-layer">
-        <!-- 顶部区域 -->
-        <div class="top-bar">
-          <div class="back-btn" onclick="goBack">
-            <image class="back-icon" src="/pkg_main/assets/img/back.png"></image>
-          </div>
-          <text class="counter-text">{{currentIndex + 1}}/{{totalCount}}</text>
-          <div class="placeholder-right"></div>
-        </div>
-
-        <!-- 中间 Swiper 区域，带左右预览 -->
-        <div class="swiper-container">
-          <!-- 左侧预览：上一张头像-->
-          <div class="side-preview left-preview">
-            <stack class="side-inner">
-              <image if="{{getPrevItem().url}}" class="side-img" src="{{getPrevItem().url}}"></image>
-              <div if="{{!getPrevItem().url}}" class="side-bg" style="background-color: {{getPrevItem().color || '#dddddd'}};">
-                <text class="side-text">{{getPrevIndex() + 1}}</text>
-              </div>
-            </stack>
-          </div>
-
-          <!-- 中间主图 -->
-          <swiper class="swiper" 
-                  index="{{currentIndex}}" 
-                  onchange="onSwiperChange" 
-                  indicator="false" 
-                  loop="true">
-            <div class="swiper-item" for="{{(index, item) in avatarList}}">
-              <div class="avatar-card">
-                <!-- 正方形主图，如果有url则显示真实图片 -->
-                <image if="{{item.url}}" class="main-img-real" src="{{item.url}}"></image>
-                <div if="{{!item.url}}" class="main-img" style="background-color: {{item.color}};">
-                  <text class="img-text">{{index + 1}}</text>
-                </div>
-              </div>
+      <!-- Swiper 用于图片浏览 (仿照 Detail/index.ux) -->
+      <stack class="swiper-wrapper" ontouchstart="handleTouchStart" ontouchmove="handleTouchMove" ontouchend="handleTouchEnd">
+        <div class="swiper-main" style="width: {{mainWidth}}px; left: {{mainLeft}}px; {{transStyle}}">
+          <!-- height 调整为 250px 以适应正方形头像 -->
+          <div class="swiper-slide" for="{{(index, item) in displayList}}" style="width: {{imgWidth}}px; height: 250px; margin-right: {{gap}}px;">
+            <div class="card-box-new" style="{{getCardStyle(index)}}">
+               <!-- 如果有url则显示真实图片，否则显示占位符 -->
+               <image if="{{item.url}}" class="avatar-img" src="{{item.url}}"></image>
+               <div if="{{!item.url}}" class="placeholder-img" style="background-color: {{item.color || '#eeeeee'}};">
+                  <text class="placeholder-text">头像</text>
+               </div>
             </div>
-          </swiper>
-
-          <!-- 右侧预览：下一张头像-->
-          <div class="side-preview right-preview">
-            <stack class="side-inner">
-              <image if="{{getNextItem().url}}" class="side-img" src="{{getNextItem().url}}"></image>
-              <div if="{{!getNextItem().url}}" class="side-bg" style="background-color: {{getNextItem().color || '#dddddd'}};">
-                <text class="side-text">{{getNextIndex() + 1}}</text>
-              </div>
-            </stack>
           </div>
         </div>
+      </stack>
 
-        <!-- 底部操作栏-->
-        <div class="bottom-bar">
-          <!-- 下载按钮 -->
-          <div class="action-btn download-btn" onclick="handleDownload">
-            <image class="btn-icon" src="/pkg_main/assets/img/xiazai.png"></image>
-            <text class="btn-text">下载</text>
-          </div>
-          
-          <!-- 喜欢按钮 -->
-          <div class="action-btn like-btn" onclick="handleLike">
-            <image class="btn-icon" src="{{isLiked ? '../../assets/img/like-s.png' : '../../assets/img/like-u.png'}}"></image>
-            <text class="btn-text">{{isLiked ? '已收藏' : '收藏'}}</text>
-          </div>
+      <!-- 顶部返回按钮 -->
+      <div class="back-btn" onclick="goBack">
+        <image class="back-icon" src="/pkg_main/assets/img/back.png"></image>
+      </div>
+
+      <!-- 底部操作栏-->
+      <div class="bottom-bar">
+        <!-- 下载按钮 -->
+        <div class="action-btn download-btn" onclick="handleDownload">
+          <image class="btn-icon" src="/pkg_main/assets/img/xiazai.png"></image>
+          <text class="btn-text">下载</text>
+        </div>
+        
+        <!-- 喜欢按钮 -->
+        <div class="action-btn like-btn" onclick="handleLike">
+          <image class="btn-icon" src="{{isLiked ? '../../assets/img/like-s.png' : '../../assets/img/like-u.png'}}"></image>
+          <text class="btn-text">{{isLiked ? '已收藏' : '收藏'}}</text>
         </div>
       </div>
     </stack>
@@ -94,80 +63,188 @@ export default {
   },
   private: {
     currentIndex: 0,
-    totalCount: 20,
+    isLiked: false,
     avatarList: [],
-    isLiked: false
+    // Swiper Props
+    displayList: [],
+    swiperIndex: 0,
+    mainLeft: 0,
+    mainWidth: 0,
+    transStyle: '',
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    containerWidth: 250,
+    imgWidth: 200, // 正方形宽度
+    gap: -8,      // 间距调整
+    scale: 0.85,
+    aniTime: 300
   },
   onInit() {
-    // 优先级1：如果传入了avatarData（从Touxiang页面跳转）
+    console.log('=== Touxiang Detail Page onInit ===')
+    this.containerWidth = 250
+    this.imgWidth = 200 
+
+    // 优先级1：如果传入了avatarData
     if (this.avatarData) {
       try {
         this.avatarList = JSON.parse(this.avatarData)
-        this.totalCount = this.avatarList.length
         this.currentIndex = this.startindex ? parseInt(this.startindex) : 0
       } catch (e) {
         console.error('Parse avatarData error:', e)
         this.initDefaultAvatars()
       }
     }
-    // 优先级2：如果传入了imageUrl（从收藏页面跳转）
+    // 优先级2：如果传入了imageUrl
     else if (this.imageUrl) {
       this.avatarList = [{ url: this.imageUrl, tag: this.tag || '头像' }]
-      this.totalCount = 1
       this.currentIndex = 0
     }
-    // 优先级3：使用默认占位符
+    // 优先级3：使用默认占位符数据
     else {
       this.initDefaultAvatars()
       if (this.startindex) {
         this.currentIndex = parseInt(this.startindex)
       }
     }
+    
+    this.initSwiper()
     this.checkIfLiked()
   },
   initDefaultAvatars() {
-    // 模拟图片列表，使用不同颜色的占位符
     const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8', '#00b894', '#fab1a0', '#74b9ff', '#a29bfe'];
     this.avatarList = Array.from({ length: 20 }, (_, i) => ({
-       src: '../../assets/img/touxiang-bg.png',
        color: colors[i % colors.length]
     }));
-    this.totalCount = this.avatarList.length;
   },
-  onSwiperChange(e) {
-    this.currentIndex = e.index
-    this.checkIfLiked()
+  initSwiper() {
+     const list = this.avatarList || []
+     if (list.length > 2) {
+        this.displayList = [
+           list[list.length - 2],
+           list[list.length - 1],
+           ...list,
+           list[0],
+           list[1]
+        ]
+        this.swiperIndex = 2 + this.currentIndex
+     } else {
+        this.displayList = [...list]
+        this.swiperIndex = this.currentIndex
+     }
+     
+     // Width calculation logic
+     this.mainWidth = (this.displayList.length + 2) * (this.imgWidth + this.gap)
+     this.updateLeft()
   },
-  getCurrentAvatar() {
-    return this.avatarList[this.currentIndex] || {}
+  updateLeft() {
+    const offset = (this.containerWidth - this.imgWidth) / 2
+    this.mainLeft = offset - this.swiperIndex * (this.imgWidth + this.gap)
   },
-  getPrevIndex() {
-    const len = this.avatarList.length
-    return (this.currentIndex - 1 + len) % len
+  getCardStyle(index) {
+     let scale = 1
+     let diff = Math.abs(index - this.swiperIndex)
+     
+     if (diff === 0) {
+        scale = 1
+     } else {
+        scale = 0.85 // 侧边缩小比例
+     }
+     
+     // 正方形尺寸
+     const baseSize = 200
+     
+     const h = baseSize * scale
+     const w = baseSize * scale
+     
+     return `width: ${w}px; height: ${h}px;`
   },
-  getNextIndex() {
-    const len = this.avatarList.length
-    return (this.currentIndex + 1) % len
+  handleTouchStart(e) {
+    this.startX = e.touches[0].clientX
+    this.startY = e.touches[0].clientY
+    this.transStyle = '' // Disable transition
+    this.lastX = this.mainLeft
   },
-  getPrevItem() {
-    return this.avatarList[this.getPrevIndex()] || {}
+  handleTouchMove(e) {
+    const cx = e.touches[0].clientX
+    const dx = cx - this.startX
+    this.mainLeft = this.lastX + dx
   },
-  getNextItem() {
-    return this.avatarList[this.getNextIndex()] || {}
+  handleTouchEnd(e) {
+    const endX = e.changedTouches[0].clientX
+    const dx = endX - this.startX
+    const absDx = Math.abs(dx)
+    
+    this.transStyle = `transition: left ${this.aniTime}ms;`
+    
+    if (absDx > 50) {
+        if (dx > 0) {
+            this.prevSlider()
+        } else {
+            this.nextSlider()
+        }
+    } else {
+        this.updateLeft()
+    }
   },
-  getPrevColor() {
-    const item = this.avatarList[this.getPrevIndex()]
-    return item.color || item.url || '#dddddd'
+  prevSlider() {
+     const listLen = this.avatarList.length
+     if (listLen <= 1) {
+       this.updateLeft()
+       return
+     }
+
+     this.swiperIndex--
+     this.updateLeft()
+     
+     if (this.swiperIndex < 2) {
+          this.currentIndex = listLen - 1
+     } else {
+         this.currentIndex = this.swiperIndex - 2
+     }
+     this.checkIfLiked()
+     this.checkLoop()
   },
-  getNextColor() {
-    const item = this.avatarList[this.getNextIndex()]
-    return item.color || item.url || '#dddddd'
+  nextSlider() {
+     const listLen = this.avatarList.length
+      if (listLen <= 1) {
+       this.updateLeft()
+       return
+     }
+
+     this.swiperIndex++
+     this.updateLeft()
+     
+     if (this.swiperIndex >= listLen + 2) {
+         this.currentIndex = 0
+     } else {
+         this.currentIndex = this.swiperIndex - 2
+     }
+     this.checkIfLiked()
+     this.checkLoop()
+  },
+  checkLoop() {
+      const listLen = this.avatarList.length
+      if (listLen <= 2) return
+
+      if (this.swiperIndex === 1) {
+          setTimeout(() => {
+              this.transStyle = ''
+              this.swiperIndex = listLen + 1 
+              this.updateLeft()
+          }, this.aniTime)
+      } else if (this.swiperIndex === listLen + 2) {
+           setTimeout(() => {
+              this.transStyle = ''
+              this.swiperIndex = 2
+              this.updateLeft()
+          }, this.aniTime)
+      }
   },
   goBack() {
     router.back()
   },
   handleDownload() {
-    const self = this
     const currentItem = this.avatarList[this.currentIndex]
     
     if (!currentItem || !currentItem.url) {
@@ -181,19 +258,14 @@ export default {
       message: '开始下载...'
     })
     
-    // 对URL 中的空格进行编码
     const encodedUrl = currentItem.url.replace(/\s/g, '%20')
     
     request.download({
       url: encodedUrl,
       success: function(data) {
-        console.info('Download success, token:', data.token)
-        // 处理下载完成的文件
         request.onDownloadComplete({
           token: data.token,
           success: function(ret) {
-            console.info('Download complete, path:', ret.uri)
-            // 保存到相册
             media.saveToPhotosAlbum({
               uri: ret.uri,
               success: function() {
@@ -202,7 +274,6 @@ export default {
                 })
               },
               fail: function(data, code) {
-                console.error('Save to album failed:', data, code)
                 prompt.showToast({
                   message: '保存失败，请检查权限'
                 })
@@ -210,7 +281,6 @@ export default {
             })
           },
           fail: function(data, code) {
-            console.error('Download complete check failed:', data, code)
             prompt.showToast({
               message: '下载失败'
             })
@@ -218,7 +288,6 @@ export default {
         })
       },
       fail: function(data, code) {
-        console.error('Download request failed:', data, code)
         prompt.showToast({
           message: '下载请求失败: ' + code
         })
@@ -229,6 +298,7 @@ export default {
     const self = this
     const currentItem = this.avatarList[this.currentIndex]
     if (!currentItem || (!currentItem.url && !currentItem.color)) {
+      self.isLiked = false
       return
     }
     const itemUrl = currentItem.url || currentItem.color
@@ -277,7 +347,6 @@ export default {
         }
 
         if (self.isLiked) {
-          // 取消收藏
           favorites = favorites.filter(function(item) {
             return !(item.url === itemUrl && item.type === 'avatar')
           })
@@ -286,7 +355,6 @@ export default {
             message: '已取消收藏'
           })
         } else {
-          // 添加收藏
           const newItem = {
             url: itemUrl,
             tag: itemTag,
@@ -301,17 +369,10 @@ export default {
 
         storage.set({
           key: 'favorites',
-          value: JSON.stringify(favorites),
-          success: function() {
-            console.log('收藏保存成功')
-          },
-          fail: function(err) {
-            console.log('收藏保存失败:', err)
-          }
+          value: JSON.stringify(favorites)
         })
       },
       fail: function() {
-        // 首次添加
         const favorites = [
           {
             url: itemUrl,
@@ -321,13 +382,7 @@ export default {
         ]
         storage.set({
           key: 'favorites',
-          value: JSON.stringify(favorites),
-          success: function() {
-            console.log('收藏保存成功')
-          },
-          fail: function(err) {
-            console.log('收藏保存失败:', err)
-          }
+          value: JSON.stringify(favorites)
         })
         self.isLiked = true
         prompt.showToast({
@@ -352,7 +407,7 @@ export default {
   height: 100%;
 }
 
-/* 背景层*/
+/* 背景层 */
 .background-layer {
   width: 100%;
   height: 100%;
@@ -373,142 +428,57 @@ export default {
   position: absolute;
 }
 
-/* 内容层*/
-.content-layer {
+/* Wrapper */
+.swiper-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.swiper-main {
+  position: absolute;
+  top: 0;
+  height: 90%; 
+  flex-direction: row;
+  align-items: center;
+}
+
+.swiper-slide {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-box-new {
   width: 100%;
   height: 100%;
   flex-direction: column;
-  justify-content: space-between;
-}
-
-/* 顶部栏*/
-.top-bar {
-  width: 100%;
-  height: 100px;
-  flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding-left: 30px;
-  padding-right: 30px;
-  padding-top: 5px; 
-  margin-top:-25px
 }
 
+/* Common */
+.placeholder-text {
+  color: #ffffff;
+  font-size: 20px;
+}
+
+/* 返回按钮 */
 .back-btn {
-  width: 20px;
-  height: 20px;
+  position: absolute;
+  top: 35px;
+  left: 15px;
+  width: 18px;
+  height: 18px;
   background-color: #ffffff;
-  border-radius: 12px;
+  border-radius: 16px;
   justify-content: center;
   align-items: center;
 }
 
 .back-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.counter-text {
-  font-size: 14px;
-  font-weight: bold;
-  color: #ffffff;
-}
-
-.placeholder-right {
-  width: 44px;
-}
-
-/* 中间轮播 */
-.swiper-container {
-  flex: 1;
-  width: 100%;
-  flex-direction: row;
-  align-items: center;
-}
-
-.side-preview {
-  width: 20px;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-  padding-top: 105px;
-  padding-bottom: 140px;
-}
-
-.left-preview {
-  padding-left: 0;
-  padding-right: 4px;
-}
-
-.right-preview {
-  padding-left: 4px;
-  padding-right: 0;
-}
-
-.side-inner {
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
-
-.side-img {
-  width: 100%;
-  height: 100%;
-  resize-mode: cover;
-}
-
-.side-bg {
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
-.side-text {
-  color: #ffffff;
-  font-size: 10px;
-}
-
-.swiper {
-  flex: 1;
-  height: 100%;
-}
-
-.swiper-item {
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
-.avatar-card {
-  width: 100%; 
-  height: 100%; 
-  justify-content: center;
-  align-items: center;
-  padding: 85px 0 120px 0;
-}
-
-/* 正方形主图*/
-.main-img {
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
-.main-img-real {
-  width: 100%;
-  height: 100%;
-  resize-mode: cover;
-}
-
-.img-text {
-  color: #ffffff;
-  font-size: 48px;
-  font-weight: bold;
+  width: 18px;
+  height: 18px;
 }
 
 /* 底部操作栏*/
@@ -534,12 +504,12 @@ export default {
 }
 
 .download-btn {
-  background-color: #332266;
+  background-color: #332266; /* 深紫色近似UI */
   margin-right: 15px;
 }
 
 .like-btn {
-  background-color: #ff4455;
+  background-color: #ff4455; /* 红色近似UI */
 }
 
 .btn-icon {
@@ -552,5 +522,21 @@ export default {
   color: #ffffff;
   font-size: 13px;
   font-weight: bold;
+}
+
+.placeholder-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background-color: #333333;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  resize-mode: cover;
 }
 </style>

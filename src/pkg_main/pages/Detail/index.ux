@@ -5,40 +5,21 @@
       <image class="page-bg" src="/pkg_main/assets/img/bg.png"></image>
 
       <!-- Swiper 用于图片浏览 -->
-      <div class="swiper-wrapper">
-        <!-- 左侧边缘：上一张壁纸-->
-        <div class="side-preview left-preview">
-          <stack class="side-inner">
-            <image if="{{getPrevItem().url}}" class="side-img" src="{{getPrevItem().url}}"></image>
-            <div if="{{!getPrevItem().url}}" class="side-bg" style="background-color: {{getPrevItem().color || '#dddddd'}};">
-              <text class="side-text">{{getPrevIndex() + 1}}</text>
-            </div>
-          </stack>
-        </div>
-
-        <!-- 中间主图 -->
-        <swiper class="swiper" index="{{currentIndex}}" onchange="onSwiperChange" indicator="false" loop="true">
-          <div class="swiper-item" for="{{(index, item) in wallpaperList}}">
-            <div class="card-box">
+      <stack class="swiper-wrapper" ontouchstart="handleTouchStart" ontouchmove="handleTouchMove" ontouchend="handleTouchEnd">
+        <div class="swiper-main" style="width: {{mainWidth}}px; left: {{mainLeft}}px; {{transStyle}}">
+          <div class="swiper-slide" for="{{(index, item) in displayList}}" style="width: {{imgWidth}}px; height: 450px; margin-right: {{gap}}px;">
+            <div class="card-box-new" style="{{getCardStyle(index)}}">
                <!-- 如果有url则显示真实图片，否则显示占位符 -->
                <image if="{{item.url}}" class="wallpaper-img" src="{{item.url}}"></image>
                <div if="{{!item.url}}" class="placeholder-img" style="background-color: {{item.color || '#eeeeee'}};">
-                  <text class="placeholder-text">壁纸 {{index + 1}}</text>
+                  <!-- 这里显示的序号应该是真实序号，但是 item 是从 list 复制来的，我们可以用 item 里的 tag 或者自己通过 index 计算 -->
+                  <!-- 简单起见，不显示序号或者尽量不依赖 index -->
+                  <text class="placeholder-text">壁纸</text>
                </div>
             </div>
           </div>
-        </swiper>
-
-        <!-- 右侧边缘：下一张壁纸-->
-        <div class="side-preview right-preview">
-          <stack class="side-inner">
-            <image if="{{getNextItem().url}}" class="side-img" src="{{getNextItem().url}}"></image>
-            <div if="{{!getNextItem().url}}" class="side-bg" style="background-color: {{getNextItem().color || '#dddddd'}};">
-              <text class="side-text">{{getNextIndex() + 1}}</text>
-            </div>
-          </stack>
         </div>
-      </div>
+      </stack>
 
       <!-- 顶部返回按钮 -->
       <div class="back-btn" onclick="goBack">
@@ -69,6 +50,7 @@ import prompt from '@system.prompt'
 import storage from '@system.storage'
 import request from '@system.request'
 import media from '@system.media'
+import device from '@system.device'
 
 export default {
   protected: {
@@ -88,14 +70,33 @@ export default {
       { color: '#6c5ce7' },
       { color: '#fd79a8' },
       { color: '#00b894' }
-    ]
+    ],
+    // Swiper Props
+    displayList: [],
+    swiperIndex: 0,
+    mainLeft: 0,
+    mainWidth: 0,
+    transStyle: '',
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    containerWidth: 250,
+    imgWidth: 200, // 增大主图片宽度
+    gap: -8,
+    scale: 0.85,
+    aniTime: 300
   },
   onInit() {
+    console.log('=== Detail Page onInit ===')
+    this.containerWidth = 250
+    this.imgWidth = 200 // 增大主图片宽度
+
     // 优先级1：如果传入了wallpaperData（从Bizhi页面跳转）
     if (this.wallpaperData) {
       try {
         this.wallpaperList = JSON.parse(this.wallpaperData)
         this.currentIndex = this.startindex ? parseInt(this.startindex) : 0
+        console.log('Loaded wallpaperData, count:', this.wallpaperList.length, 'startIndex:', this.currentIndex)
       } catch (e) {
         console.error('Parse wallpaperData error:', e)
       }
@@ -104,38 +105,151 @@ export default {
     else if (this.imageUrl) {
       this.wallpaperList = [{ url: this.imageUrl, tag: this.tag || '壁纸' }]
       this.currentIndex = 0
+      console.log('Loaded single image from imageUrl:', this.imageUrl)
     }
     // 优先级3：使用默认占位符数据
     else if (this.startindex) {
       this.currentIndex = parseInt(this.startindex)
+      console.log('Using default wallpaperList, startIndex:', this.currentIndex)
     }
+    
+    console.log('Final wallpaperList:', JSON.stringify(this.wallpaperList))
+    this.initSwiper()
     this.checkIfLiked()
   },
-  onSwiperChange(e) {
-    this.currentIndex = e.index
-    this.checkIfLiked()
+  initSwiper() {
+     const list = this.wallpaperList || []
+     console.log('initSwiper - list.length:', list.length)
+     if (list.length > 2) {
+        this.displayList = [
+           list[list.length - 2],
+           list[list.length - 1],
+           ...list,
+           list[0],
+           list[1]
+        ]
+        this.swiperIndex = 2 + this.currentIndex
+     } else {
+        this.displayList = [...list]
+        this.swiperIndex = this.currentIndex
+     }
+     
+     console.log('displayList length:', this.displayList.length, 'swiperIndex:', this.swiperIndex)
+     // Width calculation logic
+     // Adjusting mainWidth to be large enough
+     this.mainWidth = (this.displayList.length + 2) * (this.imgWidth + this.gap)
+     console.log('mainWidth:', this.mainWidth, 'imgWidth:', this.imgWidth)
+     this.updateLeft()
   },
-  getPrevIndex() {
-    const len = this.wallpaperList.length
-    return (this.currentIndex - 1 + len) % len
+  updateLeft() {
+    const offset = (this.containerWidth - this.imgWidth) / 2
+    this.mainLeft = offset - this.swiperIndex * (this.imgWidth + this.gap)
+    console.log('updateLeft - offset:', offset, 'mainLeft:', this.mainLeft)
   },
-  getNextIndex() {
-    const len = this.wallpaperList.length
-    return (this.currentIndex + 1) % len
+  getCardStyle(index) {
+     let scale = 1
+     let diff = Math.abs(index - this.swiperIndex)
+     
+     if (diff === 0) {
+        scale = 1
+     } else {
+        scale = 0.85 // 侧边缩小比例
+     }
+     
+     const baseHeight = 450
+     const baseWidth = this.imgWidth
+     
+     const h = baseHeight * scale
+     const w = baseWidth * scale
+     
+     return `width: ${w}px; height: ${h}px;`
   },
-  getPrevItem() {
-    return this.wallpaperList[this.getPrevIndex()] || {}
+  handleTouchStart(e) {
+    this.startX = e.touches[0].clientX
+    this.startY = e.touches[0].clientY
+    this.transStyle = '' // Disable transition
+    this.lastX = this.mainLeft
   },
-  getNextItem() {
-    return this.wallpaperList[this.getNextIndex()] || {}
+  handleTouchMove(e) {
+    const cx = e.touches[0].clientX
+    const dx = cx - this.startX
+    this.mainLeft = this.lastX + dx
   },
-  getPrevColor() {
-    const item = this.wallpaperList[this.getPrevIndex()]
-    return item.color || item.url || '#dddddd'
+  handleTouchEnd(e) {
+    const endX = e.changedTouches[0].clientX
+    const dx = endX - this.startX
+    const absDx = Math.abs(dx)
+    
+    this.transStyle = `transition: left ${this.aniTime}ms;`
+    
+    if (absDx > 50) {
+        if (dx > 0) {
+            this.prevSlider()
+        } else {
+            this.nextSlider()
+        }
+    } else {
+        this.updateLeft()
+    }
   },
-  getNextColor() {
-    const item = this.wallpaperList[this.getNextIndex()]
-    return item.color || item.url || '#dddddd'
+  prevSlider() {
+     const listLen = this.wallpaperList.length
+     if (listLen <= 1) {
+       this.updateLeft()
+       return
+     }
+
+     this.swiperIndex--
+     this.updateLeft()
+     
+     // Update logical index for UI/Like
+     if (this.swiperIndex < 2) {
+         // Should be matching something near end
+         // If swiperIndex is 1, it matches L-1.
+          this.currentIndex = listLen - 1
+     } else {
+         this.currentIndex = this.swiperIndex - 2
+     }
+     this.checkIfLiked()
+     
+     this.checkLoop()
+  },
+  nextSlider() {
+     const listLen = this.wallpaperList.length
+      if (listLen <= 1) {
+       this.updateLeft()
+       return
+     }
+
+     this.swiperIndex++
+     this.updateLeft()
+     
+     if (this.swiperIndex >= listLen + 2) {
+         this.currentIndex = 0
+     } else {
+         this.currentIndex = this.swiperIndex - 2
+     }
+     this.checkIfLiked()
+     
+     this.checkLoop()
+  },
+  checkLoop() {
+      const listLen = this.wallpaperList.length
+      if (listLen <= 2) return
+
+      if (this.swiperIndex === 1) {
+          setTimeout(() => {
+              this.transStyle = ''
+              this.swiperIndex = listLen + 1 
+              this.updateLeft()
+          }, this.aniTime)
+      } else if (this.swiperIndex === listLen + 2) {
+           setTimeout(() => {
+              this.transStyle = ''
+              this.swiperIndex = 2
+              this.updateLeft()
+          }, this.aniTime)
+      }
   },
   goBack() {
     router.back()
@@ -155,19 +269,16 @@ export default {
       message: '开始下载...'
     })
     
-    // 对URL 中的空格进行编码
     const encodedUrl = currentItem.url.replace(/\s/g, '%20')
     
     request.download({
       url: encodedUrl,
       success: function(data) {
         console.info('Download success, token:', data.token)
-        // 处理下载完成的文件
         request.onDownloadComplete({
           token: data.token,
           success: function(ret) {
             console.info('Download complete, path:', ret.uri)
-            // 保存到相册
             media.saveToPhotosAlbum({
               uri: ret.uri,
               success: function() {
@@ -203,6 +314,7 @@ export default {
     const self = this
     const currentItem = this.wallpaperList[this.currentIndex]
     if (!currentItem || (!currentItem.url && !currentItem.color)) {
+      self.isLiked = false
       return
     }
     const itemUrl = currentItem.url || currentItem.color
@@ -251,7 +363,6 @@ export default {
         }
 
         if (self.isLiked) {
-          // 取消收藏
           favorites = favorites.filter(function(item) {
             return !(item.url === itemUrl && item.type === 'wallpaper')
           })
@@ -260,7 +371,6 @@ export default {
             message: '已取消收藏'
           })
         } else {
-          // 添加收藏
           const newItem = {
             url: itemUrl,
             tag: itemTag,
@@ -285,7 +395,6 @@ export default {
         })
       },
       fail: function() {
-        // 首次添加
         const favorites = [
           {
             url: itemUrl,
@@ -329,78 +438,33 @@ export default {
 .swiper-wrapper {
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+/* NEW SWIPER STYLES */
+.swiper-main {
+  position: absolute;
+  top: 0;
+  height: 90%; 
   flex-direction: row;
   align-items: center;
 }
 
-.side-preview {
-  width: 20px;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-  padding-top: 80px;
-  padding-bottom: 120px;
-}
-
-.left-preview {
-  padding-left: 0;
-  padding-right: 2px;
-}
-
-.right-preview {
-  padding-left: 2px;
-  padding-right: 0;
-}
-
-.side-inner {
-  width: 100%;
-  height: 100%;
+.swiper-slide {
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
-.left-preview .side-inner {
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
-  overflow: hidden;
-}
-
-.right-preview .side-inner {
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
-  overflow: hidden;
-}
-
-.side-img {
+.card-box-new {
   width: 100%;
   height: 100%;
-  resize-mode: cover;
-}
-
-.side-bg {
-  width: 100%;
-  height: 100%;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
-.side-text {
-  color: #ffffff;
-  font-size: 10px;
-}
-
-.swiper {
-  flex: 1;
-  height: 100%;
-}
-
-.swiper-item {
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
+/* Common */
 .placeholder-text {
   color: #ffffff;
   font-size: 20px;
@@ -427,7 +491,7 @@ export default {
 /* 底部操作栏*/
 .bottom-bar {
   position: absolute;
-  bottom: 25px;
+  bottom: 15px;
   left: 0;
   width: 100%;
   padding-left: 20px;
@@ -473,14 +537,6 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-}
-
-.card-box {
-  width: 92%;
-  height: 100%;
-  padding: 10px 0 85px 0;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .placeholder-img {
